@@ -3,497 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documents Velas Maker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Registro | Gran Venta</title>
+    <!-- Carga de Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración para usar la fuente Inter y un esquema de color personalizado (tema oscuro) --><script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-velas': '#D4AF37', /* Dorado para acentos y botones */
+                        'secondary-velas': '#F5F5F5', /* Blanco casi puro para textos principales */
+                        'bg-dark': '#1A1A1A', /* Fondo negro muy oscuro */
+                        'card-dark': '#2C2C2C', /* Fondo de tarjeta un poco más claro que el fondo */
+                        'text-light': '#E0E0E0', /* Texto general claro */
+                        'border-dark': '#4A4A4A', /* Bordes en el tema oscuro */
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        /* Estilos generales para asegurar que la página ocupe toda la altura */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* Light gray background */
+            background-color: #1A1A1A; /* Fondo negro muy oscuro */
         }
-        /* Estilo para los formularios progresivos */
-        .form-section {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+        /* Estilos específicos para el formulario para mejor estética */
+        .form-card {
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
-        .form-section.active {
-            display: block;
-            opacity: 1;
+        /* Input style con rounded-lg */
+        .input-style {
+            @apply w-full p-3 border bg-card-dark text-text-light rounded-lg focus:ring-2 focus:ring-primary-velas focus:border-primary-velas transition duration-150;
+            border-color: #4A4A4A; /* Borde específico para input en tema oscuro */
         }
-        .tab-button.active {
-            border-color: #3b82f6; /* blue-500 */
-            background-color: #3b82f6;
-            color: white;
+        /* Ajuste para el color del texto del placeholder en tema oscuro */
+        .input-style::placeholder {
+            color: #888;
         }
-        /* Estilos para la vista de impresión */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #print-area, #print-area * {
-                visibility: visible;
-            }
-            #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .no-print {
-                display: none;
-            }
+        /* Ajuste para el color del texto de la opción seleccionada en el select */
+        .input-style option {
+            background-color: #2C2C2C; /* Fondo de las opciones para consistencia */
+            color: #E0E0E0; /* Texto de las opciones */
         }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="font-sans min-h-screen flex items-center justify-center p-4 sm:p-8 bg-bg-dark">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <div id="registration-container" class="w-full max-w-lg">
+        
+        <!-- Tarjeta del Formulario (Inicialmente visible) -->
+        <div id="registration-form-card" class="form-card bg-card-dark rounded-xl p-6 sm:p-10">
+            <h1 class="text-3xl font-extrabold text-secondary-velas mb-2 text-center">
+                ¡Regístrate a la Gran Venta!
+            </h1>
+            <p class="text-text-light mb-8 text-center">
+                Completa tus datos para recibir ofertas exclusivas.
+            </p>
 
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-800">Documents Velas Maker</h1>
-            <p class="text-gray-500 mt-2">Tu portal para la creación y gestión de políticas y procedimientos.</p>
-        </header>
+            <form id="registration-form" onsubmit="handleRegistration(event)">
 
-        <!-- Navegación Principal -->
-        <div class="flex justify-center border-b-2 border-gray-200 mb-8 no-print">
-            <button id="btn-create-view" class="py-4 px-6 text-lg font-semibold text-gray-600 border-b-4 border-transparent hover:text-blue-600 focus:outline-none">Crear Documento</button>
-            <button id="btn-list-view" class="py-4 px-6 text-lg font-semibold text-gray-600 border-b-4 border-transparent hover:text-blue-600 focus:outline-none">Consultar Documentos</button>
-        </div>
-
-        <!-- Contenedor de Vistas -->
-        <main id="app-container">
-
-            <!-- VISTA: CREAR DOCUMENTO -->
-            <div id="create-view" class="hidden">
-                <div class="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
-                    <h2 class="text-2xl font-bold mb-6 text-center">Selecciona el tipo de documento</h2>
-                    <div class="flex justify-center gap-4 mb-8">
-                        <button id="btn-select-policy" class="tab-button py-2 px-6 rounded-lg font-semibold border-2 border-gray-300 transition-all">Política</button>
-                        <button id="btn-select-procedure" class="tab-button py-2 px-6 rounded-lg font-semibold border-2 border-gray-300 transition-all">Procedimiento</button>
-                    </div>
-
-                    <!-- Formulario de Política -->
-                    <form id="policy-form" class="hidden space-y-6">
-                        <!-- El formulario se mostrará por secciones -->
-                    </form>
-
-                    <!-- Formulario de Procedimiento -->
-                    <form id="procedure-form" class="hidden space-y-6">
-                       <!-- El formulario se mostrará por secciones -->
-                    </form>
+                <!-- Campo Nombre -->
+                <div class="mb-5">
+                    <label for="name" class="block text-sm font-medium text-text-light mb-2">Nombre Completo</label>
+                    <input type="text" id="name" required class="input-style" placeholder="Tu nombre">
                 </div>
-            </div>
 
-            <!-- VISTA: LISTA DE DOCUMENTOS -->
-            <div id="list-view" class="">
-                 <div class="bg-white p-8 rounded-2xl shadow-lg">
-                    <h2 class="text-2xl font-bold mb-6">Documentos Creados</h2>
-                    <div id="document-list" class="space-y-4">
-                        <p class="text-gray-500">No hay documentos creados aún. Ve a la sección "Crear Documento" para empezar.</p>
-                    </div>
-                 </div>
-            </div>
-        </main>
-    </div>
+                <!-- Campo Email -->
+                <div class="mb-5">
+                    <label for="email" class="block text-sm font-medium text-text-light mb-2">Correo Electrónico</label>
+                    <input type="email" id="email" required class="input-style" placeholder="ejemplo@dominio.com">
+                </div>
 
-    <!-- MODAL: DETALLES DEL DOCUMENTO -->
-    <div id="modal-details" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-             <div id="print-area" class="p-8">
-                <!-- Contenido dinámico aquí -->
-             </div>
-             <div class="p-4 bg-gray-50 border-t flex justify-end gap-3 no-print">
-                <button id="btn-modal-print" class="py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2"><i data-lucide="printer"></i>Imprimir / Guardar PDF</button>
-                <button id="btn-modal-email-prompt" class="py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2"><i data-lucide="mail"></i>Enviar por Correo</button>
-                <button id="btn-modal-close" class="py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Cerrar</button>
-            </div>
+                <!-- Campo Teléfono -->
+                <div class="mb-5">
+                    <label for="phone" class="block text-sm font-medium text-text-light mb-2">Teléfono</label>
+                    <input type="tel" id="phone" required class="input-style" placeholder="123 456 7890">
+                </div>
+
+                <!-- Campo Preferencia de Resort (Select/Dropdown) -->
+                <div class="mb-6">
+                    <label for="resort-preference" class="block text-sm font-medium text-text-light mb-2">Preferencia de Resort</label>
+                    <!-- El select usa 'rounded-lg' de la clase input-style -->
+                    <select id="resort-preference" required class="input-style appearance-none">
+                        <option value="" disabled selected>Selecciona un Resort</option>
+                        <option value="Grand Velas Riviera Nayarit">Grand Velas Riviera Nayarit</option>
+                        <option value="Grand Velas Riviera Maya">Grand Velas Riviera Maya</option>
+                        <option value="Grand Velas Los Cabos">Grand Velas Los Cabos</option>
+                        <option value="Casa Velas Puerto Vallarta">Casa Velas Puerto Vallarta</option>
+                        <option value="Velas Vallarta Puerto Vallarta">Velas Vallarta Puerto Vallarta</option>
+                    </select>
+                </div>
+
+                <!-- Checkbox de Promociones -->
+                <div class="mb-8 flex items-start">
+                    <input id="accept-promotions" type="checkbox" required class="mt-1 h-4 w-4 text-primary-velas border-border-dark bg-card-dark rounded focus:ring-primary-velas">
+                    <label for="accept-promotions" class="ml-3 text-sm text-text-light cursor-pointer">
+                        Acepto recibir información y promociones exclusivas.
+                    </label>
+                </div>
+
+                <!-- Botón de Registro con rounded-lg -->
+                <button type="submit" class="w-full bg-primary-velas text-card-dark font-semibold py-3 rounded-lg hover:bg-opacity-90 transition duration-300 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-primary-velas focus:ring-opacity-50">
+                    REGISTRAR
+                </button>
+            </form>
         </div>
-    </div>
-    
-    <!-- MODAL: ENVIAR POR CORREO -->
-    <div id="modal-email" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">Enviar Documento por Correo</h3>
-            <p class="mb-4 text-gray-600">Introduce el correo electrónico del destinatario.</p>
-            <input type="email" id="email-recipient" placeholder="ejemplo@correo.com" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
-            <div class="flex justify-end gap-3">
-                 <button id="btn-email-cancel" class="py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Cancelar</button>
-                 <button id="btn-email-send" class="py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2">
-                    <span id="email-send-text">Enviar</span>
-                    <div id="email-spinner" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white hidden"></div>
-                 </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notificación de estado -->
-    <div id="notification" class="fixed bottom-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-xl opacity-0 transition-opacity duration-300">
-        ¡Operación exitosa!
-    </div>
 
+        <!-- Mensaje de Confirmación (Inicialmente oculto) con rounded-xl -->
+        <div id="confirmation-message" class="hidden form-card bg-primary-velas rounded-xl p-10 text-card-dark text-center">
+            <svg class="w-20 h-20 mx-auto mb-6 text-card-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2 class="text-4xl font-extrabold mb-3 text-card-dark">¡Gracias por Registrar!</h2>
+            <p class="text-lg text-card-dark">
+                Tu registro ha sido completado exitosamente. Recibirás nuestras ofertas exclusivas de la Gran Venta directamente en tu correo.
+            </p>
+        </div>
+
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // !!! IMPORTANTE: REEMPLAZA ESTA URL POR LA URL DE TU SCRIPT DE GOOGLE !!!
-            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxU91NluIZBF64DPHAb8z0MAzot0u6v-DuuObAGpzc8QeHlqD8ibiq8FlA_zuZ3SoQz/exec'; // <-- PEGA TU URL AQUÍ
+        /**
+         * Función que maneja el evento de envío del formulario.
+         * Muestra el mensaje de confirmación y oculta el formulario.
+         * @param {Event} event El evento de envío del formulario.
+         */
+        function handleRegistration(event) {
+            // Previene el comportamiento predeterminado del formulario (envío a un servidor)
+            event.preventDefault();
 
-            // Referencias a elementos del DOM
-            const createView = document.getElementById('create-view');
-            const listView = document.getElementById('list-view');
-            const btnCreateView = document.getElementById('btn-create-view');
-            const btnListView = document.getElementById('btn-list-view');
-            const policyFormContainer = document.getElementById('policy-form');
-            const procedureFormContainer = document.getElementById('procedure-form');
-            const btnSelectPolicy = document.getElementById('btn-select-policy');
-            const btnSelectProcedure = document.getElementById('btn-select-procedure');
-            const documentList = document.getElementById('document-list');
+            // Referencias a los contenedores
+            const formCard = document.getElementById('registration-form-card');
+            const confirmationMessage = document.getElementById('confirmation-message');
 
-            // Modales
-            const modalDetails = document.getElementById('modal-details');
-            const modalEmail = document.getElementById('modal-email');
-            
-            // Estado de la aplicación
-            let documents = [];
-            let currentDocumentId = null;
+            // 1. Ocultar la tarjeta del formulario
+            formCard.classList.add('hidden');
 
-            // --- CAMPOS DE LOS FORMULARIOS ---
-            const policyFields = [
-                { id: 'version', label: 'Versión', type: 'text', readonly: true, placeholder: 'Se genera automáticamente' },
-                { id: 'nombre', label: 'Nombre de la Política', type: 'text', required: true },
-                { id: 'fechaEmision', label: 'Fecha de Emisión', type: 'date', required: true },
-                { id: 'departamentos', label: 'Departamentos Aplicables', type: 'checkbox', options: ['Administrativo', 'Todos los colaboradores', 'Todo colaborador con equipo de cómputo', 'Directivos', 'Externos', 'Recursos Humanos', 'Finanzas'], required: true },
-                { id: 'autor', label: 'Autor', type: 'text', required: true },
-                { id: 'aprobadoPor', label: 'Aprobada Por', type: 'text', required: true },
-                { id: 'objetivo', label: 'Objetivo', type: 'textarea', required: true },
-                { id: 'alcance', label: 'Alcance', type: 'textarea', required: true },
-                { id: 'definiciones', label: 'Definiciones', type: 'textarea', required: true },
-                { id: 'politicas', label: 'Políticas', type: 'textarea', required: true },
-                { id: 'cumplimiento', label: 'Cumplimiento General', type: 'textarea', required: true }
-            ];
+            // 2. Mostrar el mensaje de confirmación
+            confirmationMessage.classList.remove('hidden');
 
-            const procedureFields = [
-                { id: 'version', label: 'Versión', type: 'text', readonly: true, placeholder: 'Se genera automáticamente' },
-                { id: 'nombre', label: 'Nombre del Procedimiento', type: 'text', required: true },
-                { id: 'fechaEmision', label: 'Fecha de Emisión', type: 'date', required: true },
-                { id: 'departamentos', label: 'Departamentos Aplicables', type: 'checkbox', options: ['Operaciones', 'Logística', 'Mantenimiento', 'Calidad', 'Seguridad'], required: true },
-                { id: 'responsable', label: 'Responsable del Procedimiento', type: 'text', required: true },
-                { id: 'objetivo', label: 'Objetivo', type: 'textarea', required: true },
-                { id: 'alcance', label: 'Alcance', type: 'textarea', required: true },
-                { id: 'materiales', label: 'Materiales y Equipo', type: 'textarea' },
-                { id: 'pasos', label: 'Pasos a Seguir', type: 'textarea', required: true },
-                { id: 'control', label: 'Puntos de Control y Registros', type: 'textarea' }
-            ];
+            // Opcional: limpiar los campos del formulario si se quisiera volver a mostrar,
+            // aunque para este caso, la confirmación es el final de la interacción.
+            console.log('Registro simulado exitoso.');
+        }
 
-            // --- LÓGICA DE NAVEGACIÓN ---
-            const switchView = (viewToShow) => {
-                [createView, listView].forEach(v => v.classList.add('hidden'));
-                [btnCreateView, btnListView].forEach(b => b.classList.remove('text-blue-600', 'border-blue-600'));
-                
-                if (viewToShow === 'create') {
-                    createView.classList.remove('hidden');
-                    btnCreateView.classList.add('text-blue-600', 'border-blue-600');
-                } else {
-                    listView.classList.remove('hidden');
-                    btnListView.classList.add('text-blue-600', 'border-blue-600');
-                    renderDocumentList();
-                }
-            };
-            
-            btnCreateView.addEventListener('click', () => switchView('create'));
-            btnListView.addEventListener('click', () => switchView('list'));
+        // Se inicializa Firebase con una configuración mínima de variables globales
+        // La inicialización real no es necesaria ya que el registro es simulado,
+        // pero incluimos la estructura base si se quisiera añadir persistencia más adelante.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
-            // --- LÓGICA DE CREACIÓN DE FORMULARIOS ---
-            const createFormHTML = (fields) => {
-                let currentSection = 1;
-                let html = `<div class="form-section active" data-section="1">`;
-                
-                fields.forEach((field, index) => {
-                    html += `<div class="mb-4">`;
-                    html += `<label for="${field.id}" class="block text-gray-700 font-semibold mb-2">${field.label}</label>`;
-                    switch (field.type) {
-                        case 'textarea':
-                            html += `<textarea id="${field.id}" rows="4" class="w-full p-2 border border-gray-300 rounded-lg" ${field.required ? 'required' : ''}></textarea>`;
-                            break;
-                        case 'checkbox':
-                            html += `<div class="grid grid-cols-2 gap-2">`;
-                            field.options.forEach(opt => {
-                                html += `<label class="flex items-center space-x-2"><input type="checkbox" name="${field.id}" value="${opt}" class="rounded"><span>${opt}</span></label>`;
-                            });
-                            html += `</div>`;
-                            break;
-                        default:
-                            html += `<input type="${field.type}" id="${field.id}" class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50" ${field.readonly ? 'readonly' : ''} placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-                    }
-                    html += `</div>`;
-
-                    // Dividir en secciones (ej. cada 4 campos)
-                    if ((index + 1) % 4 === 0 && index < fields.length - 1) {
-                        html += `</div>`; // Cierra la sección actual
-                        currentSection++;
-                        html += `<div class="form-section" data-section="${currentSection}">`;
-                    }
-                });
-
-                html += `</div>`; // Cierra la última sección
-
-                // Botones de navegación y guardado
-                html += `
-                    <div class="flex justify-between items-center mt-8 pt-4 border-t">
-                        <button type="button" class="btn-prev py-2 px-4 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400 disabled:opacity-50" disabled>Anterior</button>
-                        <div class="step-indicators"></div>
-                        <div>
-                            <button type="button" class="btn-next py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">Siguiente</button>
-                            <button type="submit" class="btn-save hidden py-2 px-6 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600">Guardar Documento</button>
-                        </div>
-                    </div>`;
-                return html;
-            };
-
-            const setupFormNavigation = (formElement) => {
-                const sections = formElement.querySelectorAll('.form-section');
-                const btnPrev = formElement.querySelector('.btn-prev');
-                const btnNext = formElement.querySelector('.btn-next');
-                const btnSave = formElement.querySelector('.btn-save');
-                const stepIndicatorsContainer = formElement.querySelector('.step-indicators');
-                let currentSection = 0;
-
-                // Crear indicadores de paso
-                stepIndicatorsContainer.innerHTML = '';
-                sections.forEach((_, i) => {
-                    const indicator = document.createElement('span');
-                    indicator.classList.add('inline-block', 'w-3', 'h-3', 'rounded-full', 'bg-gray-300', 'mx-1', 'transition-colors');
-                    if(i === 0) indicator.classList.replace('bg-gray-300', 'bg-blue-500');
-                    stepIndicatorsContainer.appendChild(indicator);
-                });
-                const indicators = stepIndicatorsContainer.querySelectorAll('span');
-
-                const updateFormView = () => {
-                    sections.forEach((section, index) => {
-                        section.classList.toggle('active', index === currentSection);
-                    });
-                    indicators.forEach((ind, i) => {
-                        ind.classList.toggle('bg-blue-500', i <= currentSection);
-                        ind.classList.toggle('bg-gray-300', i > currentSection);
-                    });
-
-                    btnPrev.disabled = currentSection === 0;
-                    btnNext.classList.toggle('hidden', currentSection === sections.length - 1);
-                    btnSave.classList.toggle('hidden', currentSection !== sections.length - 1);
-                };
-
-                btnNext.addEventListener('click', () => {
-                    if (currentSection < sections.length - 1) {
-                        currentSection++;
-                        updateFormView();
-                    }
-                });
-
-                btnPrev.addEventListener('click', () => {
-                    if (currentSection > 0) {
-                        currentSection--;
-                        updateFormView();
-                    }
-                });
-
-                updateFormView();
-            };
-            
-            // --- LÓGICA DE SELECCIÓN DE FORMULARIO ---
-            const selectFormType = (type) => {
-                if (type === 'policy') {
-                    btnSelectPolicy.classList.add('active');
-                    btnSelectProcedure.classList.remove('active');
-                    policyFormContainer.innerHTML = createFormHTML(policyFields);
-                    policyFormContainer.classList.remove('hidden');
-                    procedureFormContainer.classList.add('hidden');
-                    setupFormNavigation(policyFormContainer);
-                    policyFormContainer.querySelector('#fechaEmision').valueAsDate = new Date();
-                } else {
-                    btnSelectPolicy.classList.remove('active');
-                    btnSelectProcedure.classList.add('active');
-                    procedureFormContainer.innerHTML = createFormHTML(procedureFields);
-                    procedureFormContainer.classList.remove('hidden');
-                    policyFormContainer.classList.add('hidden');
-                    setupFormNavigation(procedureFormContainer);
-                    procedureFormContainer.querySelector('#fechaEmision').valueAsDate = new Date();
-                }
-            };
-            
-            btnSelectPolicy.addEventListener('click', () => selectFormType('policy'));
-            btnSelectProcedure.addEventListener('click', () => selectFormType('procedure'));
-
-
-            // --- LÓGICA DE GUARDADO DE DATOS ---
-            const handleFormSubmit = async (e, type, fields) => {
-                e.preventDefault();
-                const form = e.target;
-                const btnSave = form.querySelector('.btn-save');
-                btnSave.textContent = 'Guardando...';
-                btnSave.disabled = true;
-
-                const folio = `V${Date.now()}`;
-                form.querySelector('#version').value = folio;
-                
-                const data = { type, folio };
-                fields.forEach(field => {
-                    if (field.type === 'checkbox') {
-                        data[field.id] = Array.from(form.querySelectorAll(`input[name="${field.id}"]:checked`)).map(cb => cb.value).join(', ');
-                    } else {
-                        data[field.id] = form.querySelector(`#${field.id}`).value;
-                    }
-                });
-                
-                try {
-                    const response = await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Importante para evitar errores de CORS con Google Scripts
-                        cache: 'no-cache',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'saveDocument', data })
-                    });
-                    
-                    // Aunque la respuesta sea opaca con no-cors, la solicitud se envía
-                    // Guardamos localmente para visualización inmediata
-                    documents.push(data);
-                    showNotification('Documento guardado con éxito');
-                    form.reset();
-                    selectFormType(type); // Resetea la vista del formulario
-                    switchView('list');
-
-                } catch (error) {
-                    console.error('Error al guardar:', error);
-                    showNotification('Error al guardar el documento', true);
-                } finally {
-                    btnSave.textContent = 'Guardar Documento';
-                    btnSave.disabled = false;
-                }
-            };
-
-            policyFormContainer.addEventListener('submit', (e) => handleFormSubmit(e, 'Política', policyFields));
-            procedureFormContainer.addEventListener('submit', (e) => handleFormSubmit(e, 'Procedimiento', procedureFields));
-
-            // --- LÓGICA DE VISUALIZACIÓN ---
-            const renderDocumentList = () => {
-                if (documents.length === 0) {
-                    documentList.innerHTML = `<p class="text-gray-500">No hay documentos creados aún. Ve a la sección "Crear Documento" para empezar.</p>`;
-                    return;
-                }
-                documentList.innerHTML = documents.map((doc, index) => `
-                    <div class="border rounded-lg p-4 flex justify-between items-center transition-shadow hover:shadow-md">
-                        <div>
-                            <h3 class="font-bold text-lg text-gray-800">${doc.nombre}</h3>
-                            <p class="text-sm text-gray-500">
-                                <span class="font-semibold">${doc.type}</span> | Versión: ${doc.folio} | Fecha: ${doc.fechaEmision}
-                            </p>
-                            <p class="text-gray-600 mt-1">${doc.objetivo.substring(0, 100)}...</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button data-id="${doc.folio}" class="btn-view p-2 rounded-full hover:bg-gray-200"><i data-lucide="eye" class="pointer-events-none"></i></button>
-                        </div>
-                    </div>
-                `).join('');
-                lucide.createIcons();
-            };
-            
-            documentList.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-view')) {
-                    const button = e.target.closest('.btn-view');
-                    const docId = button.dataset.id;
-                    const doc = documents.find(d => d.folio === docId);
-                    if (doc) {
-                        currentDocumentId = docId;
-                        showDetailsModal(doc);
-                    }
-                }
-            });
-
-            // --- LÓGICA DE MODALES ---
-            const showDetailsModal = (doc) => {
-                const fields = doc.type === 'Política' ? policyFields : procedureFields;
-                const printArea = modalDetails.querySelector('#print-area');
-                
-                let contentHTML = `<h2 class="text-3xl font-bold mb-2">${doc.nombre}</h2>
-                                   <p class="text-gray-500 mb-6">${doc.type} | Versión: ${doc.folio}</p>`;
-                
-                fields.forEach(field => {
-                    if (doc[field.id]) {
-                       contentHTML += `<div class="mb-4">
-                                          <h4 class="font-bold text-lg mb-1 text-gray-700">${field.label}</h4>
-                                          <p class="text-gray-600 whitespace-pre-wrap">${doc[field.id]}</p>
-                                      </div>`;
-                    }
-                });
-
-                printArea.innerHTML = contentHTML;
-                modalDetails.classList.remove('hidden');
-            };
-
-            modalDetails.querySelector('#btn-modal-close').addEventListener('click', () => modalDetails.classList.add('hidden'));
-            modalDetails.querySelector('#btn-modal-print').addEventListener('click', () => window.print());
-            modalDetails.querySelector('#btn-modal-email-prompt').addEventListener('click', () => modalEmail.classList.remove('hidden'));
-
-            // Lógica Modal Email
-            modalEmail.querySelector('#btn-email-cancel').addEventListener('click', () => modalEmail.classList.add('hidden'));
-            modalEmail.querySelector('#btn-email-send').addEventListener('click', async () => {
-                const recipient = document.getElementById('email-recipient').value;
-                if (!recipient || !recipient.includes('@')) {
-                    alert('Por favor, introduce un correo válido.');
-                    return;
-                }
-                const doc = documents.find(d => d.folio === currentDocumentId);
-                if (!doc) return;
-
-                const btn = modalEmail.querySelector('#btn-email-send');
-                const spinner = modalEmail.querySelector('#email-spinner');
-                const btnText = modalEmail.querySelector('#email-send-text');
-
-                btnText.classList.add('hidden');
-                spinner.classList.remove('hidden');
-                btn.disabled = true;
-
-                try {
-                     const response = await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        cache: 'no-cache',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'sendEmail', data: { doc, recipient } })
-                    });
-                    showNotification('Correo enviado con éxito');
-                } catch (error) {
-                    console.error('Error al enviar correo:', error);
-                    showNotification('Error al enviar el correo', true);
-                } finally {
-                    btnText.classList.remove('hidden');
-                    spinner.classList.add('hidden');
-                    btn.disabled = false;
-                    modalEmail.classList.add('hidden');
-                    document.getElementById('email-recipient').value = '';
-                }
-            });
-
-            // --- UTILIDADES ---
-            const showNotification = (message, isError = false) => {
-                const notification = document.getElementById('notification');
-                notification.textContent = message;
-                notification.classList.toggle('bg-red-500', isError);
-                notification.classList.toggle('bg-green-500', !isError);
-                notification.classList.remove('opacity-0');
-                setTimeout(() => {
-                    notification.classList.add('opacity-0');
-                }, 3000);
-            };
-
-
-            // --- INICIALIZACIÓN ---
-            lucide.createIcons();
-            switchView('list'); // Empezar en la vista de lista
-            selectFormType('policy'); // Pre-seleccionar el formulario de política
-        });
     </script>
 </body>
 </html>
